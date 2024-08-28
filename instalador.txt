@@ -1,0 +1,1 @@
+wget https://raw.githubusercontent.com/T3mma/script-with-bot/main/install && chmod 777 install && ./install
