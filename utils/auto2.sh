@@ -1,74 +1,81 @@
 #!/bin/bash
 
-fun_bar () {
-          comando[0]="$1"
-          comando[1]="$2"
-          (
-          [[ -e $HOME/fim ]] && rm $HOME/fim
-          ${comando[0]} > /dev/null 2>&1
-          ${comando[1]} > /dev/null 2>&1
-          touch $HOME/fim
-          ) > /dev/null 2>&1 &
-          tput civis
-		  echo -e "\033[1;31m---------------------------------------------------\033[1;37m"
-          echo -ne "${col7}    ESPERE..\033[1;35m["
-          while true; do
-          for((i=0; i<18; i++)); do
-          echo -ne "\033[1;34m#"
-          sleep 0.2s
-          done
-         [[ -e $HOME/fim ]] && rm $HOME/fim && break
-         echo -e "${col5}"
-         sleep 1s
-         tput cuu1
-         tput dl1
-         echo -ne "\033[1;37m    ESPERE SENTADO..\033[1;35m["
-         done
-         echo -e "\033[1;35m]\033[1;37m -\033[1;32m INSTALADO !\033[1;37m"
-         tput cnorm
-		 echo -e "\033[1;31m---------------------------------------------------\033[1;37m"
-        }
-        
+fun_bar() {
+    comando[0]="$1"
+    comando[1]="$2"
+    (
+        [[ -e $HOME/fim ]] && rm $HOME/fim
+        ${comando[0]} >/dev/null 2>&1
+        ${comando[1]} >/dev/null 2>&1
+        touch $HOME/fim
+    ) >/dev/null 2>&1 &
+    tput civis
+    echo -e "\033[1;31m---------------------------------------------------\033[1;37m"
+    echo -ne "${col7}    ESPERE...\033[1;35m["
+    while true; do
+        for ((i = 0; i < 18; i++)); do
+            echo -ne "\033[1;34m#"
+            sleep 0.2s
+        done
+        [[ -e $HOME/fim ]] && rm $HOME/fim && break
+        echo -e "${col5}"
+        sleep 1s
+        tput cuu1
+        tput dl1
+        echo -ne "\033[1;37m    ESPERE POR FAVOR..\033[1;35m["
+    done
+    echo -e "\033[1;35m]\033[1;37m -\033[1;32m INSTALADO !\033[1;37m"
+    tput cnorm
+    echo -e "\033[1;31m---------------------------------------------------\033[1;37m"
+}
 
-clear&&clear
+clear && clear
 echo -e "\033[1;31m———————————————————————————————————————————————————\033[1;37m"
-echo -e "\033[1;32m              WS+ SSL |2023 "
+echo -e "\033[1;32m                      WS + SSL "
 echo -e "\033[1;31m———————————————————————————————————————————————————\033[1;37m"
 echo -e "\033[1;36m              SCRIPT AUTOCONFIGURACION "
 echo -e "\033[1;31m———————————————————————————————————————————————————\033[1;37m"
-echo -e "\033[1;37mRequisitos: puerto libre ,80 y el 443"
+echo -e "\033[1;37mRequisitos: Puertos libres: 80 y 443"
 echo
 echo -e "\033[1;33m                 INSTALANDO SSL... "
-inst_ssl () {
+inst_ssl() {
 
-apt-get install stunnel4 -y
-echo -e "client = no\n[SSL]\ncert = /etc/stunnel/stunnel.pem\naccept = 443 \nconnect = 127.0.0.1:80" > /etc/stunnel/stunnel.conf
-openssl genrsa -out stunnel.key 2048 > /dev/null 2>&1
-(echo "" ; echo "" ; echo "" ; echo "" ; echo "" ; echo "" ; echo "@cloudflare" )|openssl req -new -key stunnel.key -x509 -days 1000 -out stunnel.crt 
-cat stunnel.crt stunnel.key > stunnel.pem 
-mv stunnel.pem /etc/stunnel/
-sed -i 's/ENABLED=0/ENABLED=1/g' /etc/default/stunnel4
-service stunnel4 restart 
-rm -rf /etc/ger-frm/stunnel.crt 
-rm -rf /etc/ger-frm/stunnel.key
-rm -rf /root/stunnel.crt
-rm -rf /root/stunnel.key
+    apt-get install stunnel4 -y
+    echo -e "client = no\n[SSL]\ncert = /etc/stunnel/stunnel.pem\naccept = 443 \nconnect = 127.0.0.1:80" >/etc/stunnel/stunnel.conf
+    openssl genrsa -out stunnel.key 2048 >/dev/null 2>&1
+    (
+        echo ""
+        echo ""
+        echo ""
+        echo ""
+        echo ""
+        echo ""
+        echo "@cloudflare"
+    ) | openssl req -new -key stunnel.key -x509 -days 1000 -out stunnel.crt
+    cat stunnel.crt stunnel.key >stunnel.pem
+    mv stunnel.pem /etc/stunnel/
+    sed -i 's/ENABLED=0/ENABLED=1/g' /etc/default/stunnel4
+    service stunnel4 restart
+    rm -rf /etc/ger-frm/stunnel.crt
+    rm -rf /etc/ger-frm/stunnel.key
+    rm -rf /root/stunnel.crt
+    rm -rf /root/stunnel.key
 
 }
 fun_bar 'inst_ssl'
 echo -e "\033[1;33m                 CONFIGURANDO SSL.. "
 fun_bar 'inst_ssl'
 echo -e "\033[1;33m                 CONFIGURANDO PYTHON.. "
-inst_py () {
+inst_py() {
 
-pkill -f 80
-pkill python
-apt install python -y
-apt install screen -y
+    pkill -f 80
+    pkill python
+    apt install python -y
+    apt install screen -y
 
-pt=$(netstat -nplt |grep 'sshd' | awk -F ":" NR==1{'print $2'} | cut -d " " -f 1)
+    pt=$(netstat -nplt | grep 'sshd' | awk -F ":" NR==1{'print $2'} | cut -d " " -f 1)
 
- cat <<EOF > proxy.py
+    cat <<EOF >proxy.py
 import socket, threading, thread, select, signal, sys, time, getopt
 
 # CONFIG
@@ -80,7 +87,7 @@ PASS = ''
 BUFLEN = 4096 * 4
 TIMEOUT = 60
 DEFAULT_HOST = "127.0.0.1:$pt"
-RESPONSE = 'HTTP/1.1 101 <b><font color="yellow"> SSL+PY </color></b><font color="gray">diegovip7</font>\r\nConnection: Upgrade\r\nUpgrade: websocket\r\n\r\nHTTP/1.1 200 Connection Established\r\n\r\n'
+RESPONSE = 'HTTP/1.1 101 <b><font color="yellow"> SSL + PY </color></b><font color="gray">T3MMA</font>\r\nConnection: Upgrade\r\nUpgrade: websocket\r\n\r\nHTTP/1.1 200 Connection Established\r\n\r\n'
 
 class Server(threading.Thread):
     def __init__(self, host, port):
@@ -338,10 +345,10 @@ if __name__ == '__main__':
     main()
 EOF
 
-screen -dmS pythonwe python proxy.py -p 80&
+    screen -dmS pythonwe python proxy.py -p 80 &
 
 }
 fun_bar 'inst_py'
 rm -rf proxy.py
-echo -e "             ssl+py instalado"
+echo -e "             SSL + PY Instalado"
 echo
